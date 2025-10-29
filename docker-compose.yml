@@ -27,7 +27,7 @@ services:
       DATABASES_DB: moodle
       USER: moodle
       PASSWORD: "m@0dl3ing"
-      AUTH_TYPE: md5
+      AUTH_TYPE: plain
       POOL_MODE: transaction
       PGBOUNCER_PORT: 5432 
     restart: unless-stopped
