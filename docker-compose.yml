@@ -15,16 +15,21 @@ services:
       retries: 5
 
   pgbouncer:
-    image: edoburu/pgbouncer:latest
+    image: pgbouncer/pgbouncer:1.15.0
     depends_on:
       moodledb:
         condition: service_healthy
     environment:
-      DB_USER: moodle
-      DB_PASSWORD: "m@0dl3ing"
-      DB_HOST: moodledb
-      DB_NAME: moodle
+      DATABASES_HOST: moodledb
+      DATABASES_PORT: 5432
+      DATABASES_USER: moodle
+      DATABASES_PASSWORD: "m@0dl3ing"
+      DATABASES_DB: moodle
+      USER: moodle
+      PASSWORD: "m@0dl3ing"
+      AUTH_TYPE: md5
       POOL_MODE: transaction
+      PGBOUNCER_PORT: 5432 
     restart: unless-stopped
 
   moodleapp:
@@ -42,24 +47,22 @@ services:
       MOODLE_DOCKER_DBHOST: pgbouncer
       MOODLE_DOCKER_DBPORT: 5432
     volumes:
-      - ./moodle_code:/var/www/html 
+      - ./moodle_code:/var/www/html
       - ./000-default.conf:/etc/apache2/sites-enabled/000-default.conf
-      - moodle_data_vol:/var/www/moodledata 
+      - moodle_data_vol:/var/www/moodledata
     entrypoint: /bin/bash -c "chown -R www-data:www-data /var/www/html && chmod -R 777 /var/www/moodledata && apache2-foreground"
     restart: unless-stopped
     user: "www-data"
-    ports:
-      - "8090:80"
 
-  # haproxy:
-  #   image: haproxy:latest
-  #   depends_on:
-  #     - moodleapp
-  #   volumes:
-  #     - ./haproxy_config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-  #   ports:
-  #     - "8080:80"
-  #   restart: unless-stopped
+  haproxy:
+    image: haproxy:latest
+    depends_on:
+      - moodleapp
+    ports:
+      - "8080:80"
+    volumes:
+      - ./haproxy_config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    restart: unless-stopped
 
 volumes:
   pg_data:
