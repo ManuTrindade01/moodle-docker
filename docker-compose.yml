@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   moodledb: 
     image: postgres:15
@@ -20,16 +22,29 @@ services:
       moodledb:
         condition: service_healthy
     environment:
+      # --- Variáveis RESTAURADAS (para parar o crash) ---
       DATABASES_HOST: moodledb
       DATABASES_PORT: 5432
       DATABASES_USER: moodle
       DATABASES_PASSWORD: "m@0dl3ing"
       DATABASES_DB: moodle
-      USER: moodle
-      PASSWORD: "m@0dl3ing"
+      USER: moodle         # Usuário para o Moodle se conectar ao PgBouncer
+      PASSWORD: "m@0dl3ing" # Senha para o Moodle se conectar ao PgBouncer
       AUTH_TYPE: plain
       POOL_MODE: transaction
-      PGBOUNCER_PORT: 5432 
+      PGBOUNCER_PORT: 6432
+      
+      # --- A CORREÇÃO DEFINITIVA ---
+      # Esta variável injeta nossa correção no pgbouncer.ini gerado
+      PGBOUNCER_IGNORE_STARTUP_PARAMETERS: options
+      
+    # --- REMOVA OS VOLUMES DOS ARQUIVOS DE CONFIGURAÇÃO ---
+    # O script de entrada agora irá gerar o pgbouncer.ini e o userlist.txt
+    # usando as variáveis de ambiente acima.
+    volumes: [] 
+    
+    ports:
+      - "6432:6432"
     restart: unless-stopped
 
   moodleapp:
@@ -43,14 +58,14 @@ services:
       MOODLE_DOCKER_DBNAME: moodle
       MOODLE_DOCKER_DBUSER: moodle
       MOODLE_DOCKER_DBPASS: "m@0dl3ing"
-      MOODLE_DOCKER_DBTYPE: postgres 
+      MOODLE_DOCKER_DBTYPE: pgsql
       MOODLE_DOCKER_DBHOST: pgbouncer
-      MOODLE_DOCKER_DBPORT: 5432
+      MOODLE_DOCKER_DBPORT: 6432
     volumes:
       - ./moodle_code:/var/www/html
       - ./000-default.conf:/etc/apache2/sites-enabled/000-default.conf
       - moodle_data_vol:/var/www/moodledata
-    entrypoint: /bin/bash -c "chown -R www-data:www-data /var/www/html && chmod -R 777 /var/www/moodledata && apache2-foreground"
+    entrypoint: /bin/bash -c "chown -R www-data:www-data /var/www/html /var/www/moodledata && chmod -R 770 /var/www/moodledata && apache2-foreground"
     restart: unless-stopped
     user: "www-data"
 
