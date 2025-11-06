@@ -67,7 +67,6 @@ services:
       - moodle_data_vol:/var/www/moodledata
     entrypoint: /bin/bash -c "chown -R www-data:www-data /var/www/html /var/www/moodledata && chmod -R 770 /var/www/moodledata && apache2-foreground"
     restart: unless-stopped
-    user: "www-data"
 
   haproxy:
     image: haproxy:latest
