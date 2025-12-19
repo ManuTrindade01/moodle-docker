@@ -52,6 +52,7 @@ services:
     container_name: moodleapp
     depends_on:
       - pgbouncer
+      - mailhog
     environment:
       MOODLE_DOCKER_WEB_PORT: 8080
       MOODLE_DOCKER_WEB_HOST: localhost
@@ -77,6 +78,13 @@ services:
     volumes:
       - ./haproxy_config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     restart: unless-stopped
+  
+  mailhog:
+    image: mailhog/mailhog
+    container_name: moodle_mailhog
+    ports:
+      - "1025:1025" #Porta SMTP
+      - "8025:8025" #Interface Web
 
 volumes:
   pg_data:
